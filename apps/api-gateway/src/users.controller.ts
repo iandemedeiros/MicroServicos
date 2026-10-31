@@ -1,40 +1,50 @@
 import {
+  Body,
   Controller,
+  Delete,
   Get,
   Inject,
-  NotFoundException,
   Param,
-  ParseIntPipe,
+  Patch,
+  Post,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { map, timeout } from 'rxjs';
-
-interface User {
-  id: number;
-  name: string;
-}
-
+import {
+  CreateUserDto,
+  UpdateUserDto,
+  UserIdDto,
+  type UserResponse,
+} from '@app/contracts';
+import { dtoPipe } from '../../../libs/transport/src/validation.js';
+import { httpRequest } from '../../../libs/transport/src/rpc.js';
 @Controller('users')
 export class UsersController {
-  constructor(
-    @Inject('USERS_SERVICE') private readonly usersClient: ClientProxy,
-  ) {}
-
+  constructor(@Inject('USERS_SERVICE') private readonly client: ClientProxy) {}
+  @Post()
+  create(@Body(dtoPipe(CreateUserDto)) dto: CreateUserDto) {
+    return httpRequest<UserResponse>(this.client, 'users.create', dto);
+  }
   @Get()
   findAll() {
-    return this.usersClient
-      .send<User[]>('users.findAll', {})
-      .pipe(timeout(5000));
+    return httpRequest<UserResponse[]>(this.client, 'users.findAll', {});
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.usersClient.send<User | null>('users.findOne', id).pipe(
-      timeout(5000),
-      map((user) => {
-        if (!user) throw new NotFoundException('Usuário não encontrado');
-        return user;
-      }),
-    );
+  findOne(@Param(dtoPipe(UserIdDto)) dto: UserIdDto) {
+    return httpRequest<UserResponse>(this.client, 'users.findOne', dto);
+  }
+  @Patch(':id')
+  update(
+    @Param(dtoPipe(UserIdDto)) dto: UserIdDto,
+    @Body(dtoPipe(UpdateUserDto)) data: UpdateUserDto,
+  ) {
+    return httpRequest<UserResponse>(this.client, 'users.update', {
+      id: dto.id,
+      data,
+    });
+  }
+  @Delete(':id')
+  remove(@Param(dtoPipe(UserIdDto)) dto: UserIdDto) {
+    return httpRequest<UserResponse>(this.client, 'users.remove', dto);
   }
 }

@@ -2,7 +2,6 @@ import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { Transport } from '@nestjs/microservices';
 import { UsersModule } from './users.module.js';
-
 const app = await NestFactory.createMicroservice(UsersModule, {
   transport: Transport.TCP,
   options: {

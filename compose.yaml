@@ -1,13 +1,24 @@
 services:
-  postgres:
+  users-postgres:
     image: postgres:17-alpine
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: users
+      POSTGRES_DB: users_db
     ports:
       - '5432:5432'
     volumes:
-      - users_data:/var/lib/postgresql/data
+      - users_v2_data:/var/lib/postgresql/data
+  orders-postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: orders_db
+    ports:
+      - '5433:5432'
+    volumes:
+      - orders_data:/var/lib/postgresql/data
 volumes:
-  users_data:
+  users_v2_data:
+  orders_data:
