@@ -19,6 +19,33 @@ services:
       - '5433:5432'
     volumes:
       - orders_data:/var/lib/postgresql/data
+  notifications-postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: notifications_db
+    ports:
+      - '5434:5432'
+    volumes:
+      - notifications_data:/var/lib/postgresql/data
+  rabbitmq:
+    image: rabbitmq:4-management
+    environment:
+      RABBITMQ_DEFAULT_USER: app
+      RABBITMQ_DEFAULT_PASS: app123
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 20
 volumes:
   users_v2_data:
   orders_data:
+  notifications_data:
+  rabbitmq_data:

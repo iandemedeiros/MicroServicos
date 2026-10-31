@@ -14,6 +14,7 @@ import { OrdersModule } from '../apps/orders/src/orders.module.js';
 import { PrismaService as UsersPrisma } from '../apps/users/src/prisma.service.js';
 import { PrismaService as OrdersPrisma } from '../apps/orders/src/prisma.service.js';
 import { firstValueFrom } from 'rxjs';
+import { OutboxPublisher } from '../apps/orders/src/outbox.publisher.js';
 
 function memoryModel() {
   const rows: Record<string, unknown>[] = [];
@@ -74,6 +75,7 @@ describe('Gateway → Users / Orders → Users via TCP', () => {
   let ordersClient: ClientProxy;
   const user = memoryModel();
   const order = memoryModel();
+  const outboxEvent = { create: vi.fn().mockResolvedValue({}) };
   const client = (app: INestMicroservice) =>
     ClientProxyFactory.create({
       transport: Transport.TCP,
@@ -100,7 +102,13 @@ describe('Gateway → Users / Orders → Users via TCP', () => {
     usersClient = client(users);
     const o = await Test.createTestingModule({ imports: [OrdersModule] })
       .overrideProvider(OrdersPrisma)
-      .useValue({ order })
+      .useValue({
+        order,
+        $transaction: (callback: (tx: unknown) => unknown) =>
+          callback({ order, outboxEvent }),
+      })
+      .overrideProvider(OutboxPublisher)
+      .useValue({})
       .overrideProvider('USERS_SERVICE')
       .useValue(usersClient)
       .compile();

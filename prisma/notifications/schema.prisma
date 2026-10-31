@@ -1,0 +1,22 @@
+generator client {
+  provider = "prisma-client"
+  output = "../../generated/notifications"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model ProcessedEvent {
+  eventId String @id
+  processedAt DateTime @default(now())
+}
+
+model Notification {
+  eventId String @id
+  orderId Int
+  userId Int
+  total Decimal @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+}

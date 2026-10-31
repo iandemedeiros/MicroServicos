@@ -7,6 +7,8 @@ import {
 } from '@app/contracts';
 import { PrismaService } from './prisma.service.js';
 import { rpcRequest, remoteError } from '../../../libs/transport/src/rpc.js';
+import { randomUUID } from 'node:crypto';
+import type { OrderCreatedEvent } from '@app/contracts';
 @Injectable()
 export class OrdersService {
   constructor(
@@ -30,7 +32,30 @@ export class OrdersService {
   }
   async create(data: CreateOrderDto) {
     await this.requireUser(data.userId);
-    return this.prisma.order.create({ data });
+    return this.prisma.$transaction(async (tx) => {
+      const order = await tx.order.create({ data });
+      const event: OrderCreatedEvent = {
+        eventId: randomUUID(),
+        orderId: order.id,
+        userId: order.userId,
+        total: order.total.toString(),
+        occurredAt: new Date().toISOString(),
+      };
+      await tx.outboxEvent.create({
+        data: {
+          id: event.eventId,
+          eventType: 'order.created',
+          payload: {
+            eventId: event.eventId,
+            orderId: event.orderId,
+            userId: event.userId,
+            total: event.total,
+            occurredAt: event.occurredAt,
+          },
+        },
+      });
+      return order;
+    });
   }
   findAll() {
     return this.prisma.order.findMany({ orderBy: { id: 'asc' } });

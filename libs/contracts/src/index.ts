@@ -1,5 +1,6 @@
 export * from './users.dto.js';
 export * from './orders.dto.js';
+export * from './events.js';
 
 export interface UserResponse {
   id: number;

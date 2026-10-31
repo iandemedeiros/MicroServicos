@@ -13,3 +13,13 @@ model Order {
  total Decimal @db.Decimal(10, 2)
  createdAt DateTime @default(now())
 }
+
+model OutboxEvent {
+ id String @id @default(uuid())
+ eventType String
+ payload Json
+ createdAt DateTime @default(now())
+ publishedAt DateTime?
+
+ @@index([publishedAt, createdAt])
+}

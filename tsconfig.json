@@ -28,7 +28,8 @@
     "libs/**/*.ts",
     "test/**/*.ts",
     "prisma/**/*.ts",
-    "*.ts"
+    "*.ts",
+    "scripts/**/*.ts"
   ],
   "exclude": ["node_modules", "dist"]
 }
